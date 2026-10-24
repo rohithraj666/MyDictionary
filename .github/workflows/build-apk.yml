@@ -34,8 +34,8 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract project
-        run: unzip -q Briefcase-Import-Export-Compact-Dark-Source.zip
+      - name: Extract source ZIP
+  run: unzip -q Briefcase-Copy-Remarks-PIN-Fingerprint-Icon-Source.zip
 
       - name: Fix Java and Kotlin targets
         run: |
