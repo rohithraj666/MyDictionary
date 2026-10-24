@@ -35,7 +35,7 @@ jobs:
           gradle-version: '8.9'
 
       - name: Extract project
-        run: unzip -q MyDictionary-Simple-Local-Source-Fixed.zip
+        run: unzip -q MyDictionary-Simple-Local-Source-Fixed2.zip
 
       - name: Fix Java and Kotlin targets
         run: |
