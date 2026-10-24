@@ -34,7 +34,7 @@ jobs:
           gradle-version: '8.9'
 
       - name: Extract project
-        run: unzip -q MyDictionary-Simple-Local-Source.zip
+        run: unzip -q MyDictionary-Simple-Local-Source-Fixed.zip
 
       - name: Build APK
         run: |
