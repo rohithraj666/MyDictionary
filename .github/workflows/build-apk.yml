@@ -35,7 +35,7 @@ jobs:
           gradle-version: '8.9'
 
       - name: Extract project
-        run: unzip -q MyDictionary-Simple-Local-Source-Fixed6-Readable-Compact-Dark.zip
+        run: unzip -q MyDictionary-Simple-Local-Source-Fixed7-Back-Buttons-Spacing.zip
 
       - name: Fix Java and Kotlin targets
         run: |
