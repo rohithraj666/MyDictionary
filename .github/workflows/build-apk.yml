@@ -1,101 +1,43 @@
 
-name: Build My Dictionary APK
+name: Build APK
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
-
-permissions:
-  contents: read
+  push:
+    branches: [ main, master ]
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Extract source ZIP
-        run: unzip -q Briefcase-Copy-Remarks-PIN-Fingerprint-Icon-Source.zip
-
-      - name: Fix Java and Kotlin targets
+      - name: Extract Briefcase source
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
+          unzip -o Briefcase-Updated-Security-Source.zip -d extracted
 
-          p = Path("MyDictionary/app/build.gradle.kts")
-          s = p.read_text()
-
-          block = """    compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }"""
-
-          if re.search(r'compileOptions\s*\{', s):
-              s = re.sub(
-                  r'compileOptions\s*\{[^}]*\}',
-                  block,
-                  s,
-                  count=1
-              )
-          else:
-              s, n = re.subn(
-                  r'android\s*\{',
-                  'android {\n' + block,
-                  s,
-                  count=1
-              )
-              if n == 0:
-                  raise SystemExit("Could not find android block")
-
-          if re.search(r'kotlinOptions\s*\{', s):
-              s = re.sub(
-                  r'kotlinOptions\s*\{[^}]*\}',
-                  'kotlinOptions {\n        jvmTarget = "17"\n    }',
-                  s,
-                  count=1
-              )
-          else:
-              s = re.sub(
-                  r'android\s*\{',
-                  'android {\n    kotlinOptions {\n        jvmTarget = "17"\n    }',
-                  s,
-                  count=1
-              )
-
-          p.write_text(s)
-          print("Java and Kotlin targets set to 17")
-          PY
-
-      - name: Build APK
+      - name: Build debug APK
         run: |
-          cd MyDictionary
+          cd extracted/MyDictionary
           gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MyDictionary-APK
-          path: MyDictionary/app/build/outputs/apk/debug/app-debug.apk
+          name: Briefcase-APK
+          path: extracted/MyDictionary/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           
