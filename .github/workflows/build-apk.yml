@@ -3,7 +3,8 @@ name: Build My Dictionary APK
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -36,6 +37,56 @@ jobs:
       - name: Extract project
         run: unzip -q MyDictionary-Simple-Local-Source-Fixed.zip
 
+      - name: Fix Java and Kotlin targets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("MyDictionary/app/build.gradle.kts")
+          s = p.read_text()
+
+          block = """    compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }"""
+
+          if re.search(r'compileOptions\s*\{', s):
+              s = re.sub(
+                  r'compileOptions\s*\{[^}]*\}',
+                  block,
+                  s,
+                  count=1
+              )
+          else:
+              s, n = re.subn(
+                  r'android\s*\{',
+                  'android {\n' + block,
+                  s,
+                  count=1
+              )
+              if n == 0:
+                  raise SystemExit("Could not find android block")
+
+          if re.search(r'kotlinOptions\s*\{', s):
+              s = re.sub(
+                  r'kotlinOptions\s*\{[^}]*\}',
+                  'kotlinOptions {\n        jvmTarget = "17"\n    }',
+                  s,
+                  count=1
+              )
+          else:
+              s = re.sub(
+                  r'android\s*\{',
+                  'android {\n    kotlinOptions {\n        jvmTarget = "17"\n    }',
+                  s,
+                  count=1
+              )
+
+          p.write_text(s)
+          print("Java and Kotlin targets set to 17")
+          PY
+
       - name: Build APK
         run: |
           cd MyDictionary
@@ -46,4 +97,5 @@ jobs:
         with:
           name: MyDictionary-APK
           path: MyDictionary/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
           
