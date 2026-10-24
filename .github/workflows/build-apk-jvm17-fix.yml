@@ -1,0 +1,76 @@
+
+name: Build Briefcase APK - JVM 17 Fix
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extract Briefcase source
+        run: |
+          test -f Briefcase-Updated-Security-Source.zip
+          unzip -o Briefcase-Updated-Security-Source.zip -d extracted
+          test -f extracted/MyDictionary/app/build.gradle.kts
+
+      - name: Fix Java and Kotlin JVM targets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("extracted/MyDictionary/app/build.gradle.kts")
+          s = p.read_text()
+
+          if "compileOptions {" not in s:
+              s = s.replace(
+                  "android {\n",
+                  """android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+
+          """,
+                  1
+              )
+
+          p.write_text(s)
+          print(p.read_text())
+          PY
+
+      - name: Build debug APK
+        run: |
+          cd extracted/MyDictionary
+          gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Briefcase-APK
+          path: extracted/MyDictionary/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          
