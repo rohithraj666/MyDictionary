@@ -1,0 +1,31 @@
+
+      - name: Match Kotlin target to Java
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("extracted/MyDictionary/app/build.gradle.kts")
+          s = p.read_text()
+
+          s = s.replace(
+              "sourceCompatibility = JavaVersion.VERSION_17",
+              "sourceCompatibility = JavaVersion.VERSION_1_8"
+          )
+          s = s.replace(
+              "targetCompatibility = JavaVersion.VERSION_17",
+              "targetCompatibility = JavaVersion.VERSION_1_8"
+          )
+          s = s.replace('jvmTarget = "17"', 'jvmTarget = "1.8"')
+
+          if 'jvmTarget = "1.8"' not in s:
+              s = s.replace(
+                  'android {',
+                  'android {\n    kotlinOptions { jvmTarget = "1.8" }',
+                  1
+              )
+
+          p.write_text(s)
+          print("Updated JVM targets:")
+          print(s)
+          PY
+          
